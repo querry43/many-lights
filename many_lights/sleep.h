@@ -43,10 +43,12 @@ void _sleep() {
   utils::debug("waking up from sleep");
 }
 
+void reset_sleep_timer() { _wakeup_millis = millis(); }
+
 void update() {
   for (unsigned int i = 0; i < config::num_input_pins(); i++)
     if (digitalRead(config::input_pins[i]) == LOW)
-      _wakeup_millis = millis();
+      reset_sleep_timer();
 
   if (millis() - _wakeup_millis > config::sleep_after_millis)
     _sleep();

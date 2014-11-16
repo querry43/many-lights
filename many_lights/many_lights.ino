@@ -4,7 +4,7 @@
      encoder cycles existing leds through color wheel
      encoder also rotates led ring
      encoder button does random color pulse
-     any input presses or hold will cause wakeup and reset the wakeup timer
+     any button presses will cause wakeup and reset the wakeup timer
    consider:
      using 3xAA batteries (instead of 4) to avoid needing a regulator
    questions:
@@ -48,28 +48,23 @@ void setup() {
 void loop() {
   sleep::update();
   encoder::update();
+  
+  if (digitalRead(config::encoder_button) == HIGH)
+    pixels::change_ring_color();
+  
+  encoder::set_color(1023, 0, 0);
 
-  if (encoder::value() > last_encoder_value) {
+  if (encoder::value() > last_encoder_value + config::encoder_sensitivity) {
     utils::debug("encoder clockwise");
-    pixels::rotate_ring(1);
-  } else if (encoder::value() < last_encoder_value) {
+    pixels::rotate_ring(true);
+    last_encoder_value = encoder::value();
+    sleep::reset_sleep_timer();
+  } else if (encoder::value() < last_encoder_value - config::encoder_sensitivity) {
     utils::debug("encoder counter clockwise");
-    pixels::rotate_ring(-1);
+    pixels::rotate_ring(false);
+    last_encoder_value = encoder::value();
+    sleep::reset_sleep_timer();
   }
-  
-  last_encoder_value = encoder::value();
-  
-  if (digitalRead(config::red_button) == LOW)
-    pixels::_pixels.setPixelColor(0, 255, 0, 0);
-  
-  if (digitalRead(config::green_button) == LOW)
-    pixels::_pixels.setPixelColor(0, 0, 255, 0);
-  
-  if (digitalRead(config::blue_button) == LOW)
-    pixels::_pixels.setPixelColor(0, 0, 0, 255);
-  
-  if (digitalRead(config::yellow_button) == LOW)
-    pixels::_pixels.setPixelColor(0, 255, 255, 0);
-  
-  pixels::_pixels.show();
+
+  pixels::show();
 }

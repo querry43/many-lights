@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils.h"
+
 namespace encoder {
   
 int _last_encoded;
@@ -19,6 +21,12 @@ void setup() {
 
   digitalWrite(config::encoder_a, HIGH);
   digitalWrite(config::encoder_b, HIGH);
+  
+  pinMode(config::encoder_button, INPUT);
+  
+  pinMode(config::encoder_red, OUTPUT);
+  pinMode(config::encoder_green, OUTPUT);
+  pinMode(config::encoder_blue, OUTPUT);
 
   _last_encoded = _get_value();
 }
@@ -34,5 +42,11 @@ void update() {
 }
 
 int value() { return _encoder_value; }
+
+void set_color(int r, int g, int b) {
+  analogWrite(config::encoder_red, r);
+  analogWrite(config::encoder_green, g);
+  analogWrite(config::encoder_blue, b);
+}
 
 }
