@@ -19,6 +19,15 @@ void setup() {
   _ring_color = Adafruit_NeoPixel::Color(255, 0, 255);
 }
 
+void set_grid_pixel(int x, int y, int r, int g, int b) {
+  _pixels.setPixelColor(y * config::num_grid_cols + x, r, g, b);
+}
+
+void set_grid_pixel(int x, int y, uint32_t c) {
+  _pixels.setPixelColor(y * config::num_grid_cols + x, c);
+}
+
+
 void rotate_ring(boolean forward) {
   if (forward) {
     int last_value = _ring_values[config::num_ring_pixels-1];
@@ -54,11 +63,49 @@ void change_ring_color() {
 void show() {
   for (int i = 0; i < config::num_ring_pixels; i++)
     if (_ring_values[i])
-      pixels::_pixels.setPixelColor(i, _ring_color);
+      pixels::_pixels.setPixelColor(config::num_grid_pixels + i, _ring_color);
     else
-      pixels::_pixels.setPixelColor(i, 0, 0, 0);
+      pixels::_pixels.setPixelColor(config::num_grid_pixels + i, 0, 0, 0);
 
     _pixels.show();
 }
+
+void clear() {
+  _pixels.clear();
+}
+
+// pixels::burst(random(8), random(4), random(2), random(2), random(2));
+void burst(int x, int y, int r, int g, int b) {
+  bool inc = true;
+  int t = 0;
+  
+  while (true) {
+    int _r = t*r, _g = t*g, _b = t*b;
+
+    pixels::set_grid_pixel(x, y, inc ? _r : max(0, _r-100), inc ? _g : max(0, _g-100), inc ? _b : max(0, _b-100));
+    
+    if (x < config::num_grid_cols - 1) pixels::set_grid_pixel(x+1, y, inc ? max(0, _r-100) : _r, inc ? max(0, _g-100) : _g, inc ? max(0, _b-100) : _b);
+    if (x > 0) pixels::set_grid_pixel(x-1, y, inc ? max(0, _r-100) : _r, inc ? max(0, _g-100) : _g, inc ? max(0, _b-100) : _b);
+    if (y < config::num_grid_rows - 1) pixels::set_grid_pixel(x, y+1, inc ? max(0, _r-100) : _r, inc ? max(0, _g-100) : _g, inc ? max(0, _b-100) : _b);
+    if (y > 0) pixels::set_grid_pixel(x, y-1, inc ? max(0, _r-100) : _r, inc ? max(0, _g-100) : _g, inc ? max(0, _b-100) : _b);
+    
+    if (t >= 200)
+      inc = false;
+
+    else if (! inc && t <= 0) {
+      clear();
+      show();
+      return;
+    }
+    
+    if (inc)
+      t++;
+    else
+      t--;
+ 
+    show();
+  }
+}
+
 
 };

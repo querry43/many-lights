@@ -14,9 +14,11 @@ const int encoder_sensitivity = 3;
 
 const int power_enable_pin = 12;
 
-const int num_grid_pixels = 8;
+const int num_grid_cols = 8;
+const int num_grid_rows = 4;
 const int num_ring_pixels = 8;
 const int pixel_pin = 13;
+const int num_grid_pixels = num_grid_cols * num_grid_rows;
 const int num_pixels = num_grid_pixels + num_ring_pixels;
 
 const unsigned long ring_change_delay = 250UL;
