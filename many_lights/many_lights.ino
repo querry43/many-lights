@@ -29,6 +29,13 @@
 
 int last_encoder_value;
 
+pixels::random_burst bursts[] = {
+  pixels::random_burst(config::red_button, 255, 0, 0),
+  pixels::random_burst(config::green_button, 0, 255, 0),
+  pixels::random_burst(config::blue_button, 0, 0, 255),
+  pixels::random_burst(config::yellow_button, 255, 255, 0),
+};
+
 void setup() {
   Serial.begin(9600);
   utils::debug("setup()");
@@ -47,10 +54,20 @@ void setup() {
 
 void loop() {
   sleep::update();
+
+  for (int i = 0; i < 4; i++)
+    bursts[i].update();
+  
+  pixels::show();
+}
+
+void _loop() {
   encoder::update();
   
   if (digitalRead(config::encoder_button) == HIGH)
     pixels::change_ring_color();
+  for (int i = 0; i < 4; i++)
+    bursts[i].update();
   
   encoder::set_color(1023, 0, 0);
 
@@ -65,6 +82,4 @@ void loop() {
     last_encoder_value = encoder::value();
     sleep::reset_sleep_timer();
   }
-
-  pixels::show();
 }

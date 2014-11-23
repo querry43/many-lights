@@ -74,38 +74,78 @@ void clear() {
   _pixels.clear();
 }
 
-// pixels::burst(random(8), random(4), random(2), random(2), random(2));
-void burst(int x, int y, int r, int g, int b) {
-  bool inc = true;
-  int t = 0;
+class random_burst {
+private:
+  typedef enum {IDLE, INCREMENT, DECREMENT} mode_t;
+  mode_t mode;
+
+  uint8_t pin;
+  uint8_t _r, _g, _b;
+  uint8_t x, y;
   
-  while (true) {
-    int _r = t*r, _g = t*g, _b = t*b;
-
-    pixels::set_grid_pixel(x, y, inc ? _r : max(0, _r-100), inc ? _g : max(0, _g-100), inc ? _b : max(0, _b-100));
-    
-    if (x < config::num_grid_cols - 1) pixels::set_grid_pixel(x+1, y, inc ? max(0, _r-100) : _r, inc ? max(0, _g-100) : _g, inc ? max(0, _b-100) : _b);
-    if (x > 0) pixels::set_grid_pixel(x-1, y, inc ? max(0, _r-100) : _r, inc ? max(0, _g-100) : _g, inc ? max(0, _b-100) : _b);
-    if (y < config::num_grid_rows - 1) pixels::set_grid_pixel(x, y+1, inc ? max(0, _r-100) : _r, inc ? max(0, _g-100) : _g, inc ? max(0, _b-100) : _b);
-    if (y > 0) pixels::set_grid_pixel(x, y-1, inc ? max(0, _r-100) : _r, inc ? max(0, _g-100) : _g, inc ? max(0, _b-100) : _b);
-    
-    if (t >= 200)
-      inc = false;
-
-    else if (! inc && t <= 0) {
-      clear();
-      show();
-      return;
+  float t;
+  
+  random_burst() { }
+  
+  void check_button() {
+    if (digitalRead(pin) == LOW) {
+      mode = INCREMENT;
+      x = random(config::num_grid_cols);
+      y = random(config::num_grid_rows);
     }
-    
-    if (inc)
-      t++;
-    else
-      t--;
- 
-    show();
   }
-}
+  
+  void update_pattern() {
+    if (mode == DECREMENT && t <= 0.1) {
+      utils::debug("end of pattern");
+      t = 0.0;
+      mode = IDLE;
+      draw(0, 0);
+      
+    } else {
+      int r = t * _r,
+          g = t * _g,
+          b = t * _b;
+      
+      draw(
+        Adafruit_NeoPixel::Color(mode == INCREMENT ? r : max(0, r-100), mode == INCREMENT ? g : max(0, g-100), mode == INCREMENT ? b : max(0, b-100)),
+        Adafruit_NeoPixel::Color(mode == INCREMENT ? max(0, r-100) : r, mode == INCREMENT ? max(0, g-100) : g, mode == INCREMENT ? max(0, b-100) : b)
+      );
+  
+      if (t >= 0.9)
+        mode = DECREMENT;
+      
+      if (mode == INCREMENT)
+        t += 0.01;
+      else if (mode == DECREMENT)
+        t -= 0.01;
+    }
+  }
+  
+  void draw(uint32_t interior_color, uint32_t exterior_color) {
+    pixels::set_grid_pixel(x, y, interior_color);
+    
+    if (x < config::num_grid_cols - 1) 
+      pixels::set_grid_pixel(x+1, y, exterior_color);
+    if (x > 0)
+      pixels::set_grid_pixel(x-1, y, exterior_color);
 
+    if (y < config::num_grid_rows - 1)
+      pixels::set_grid_pixel(x, y+1, exterior_color);
+    if (y > 0)
+      pixels::set_grid_pixel(x, y-1, exterior_color);
+  }
+
+public:
+  random_burst(uint8_t pin, uint8_t r, uint8_t g, uint8_t b) : mode(IDLE), pin(pin), _r(r), _g(g), _b(b), t(0.0) { }
+  
+  void update() {
+    if (mode == IDLE)
+      check_button();
+    
+    if (mode != IDLE)
+      update_pattern();
+  }
+};
 
 };
