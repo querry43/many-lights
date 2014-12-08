@@ -33,7 +33,7 @@ pixels::random_burst bursts[] = {
   pixels::random_burst(config::red_button, 255, 0, 0),
   pixels::random_burst(config::green_button, 0, 255, 0),
   pixels::random_burst(config::blue_button, 0, 0, 255),
-  pixels::random_burst(config::yellow_button, 255, 255, 0),
+  pixels::random_burst(config::yellow_button, 200, 255, 0),
 };
 
 void setup() {
@@ -50,6 +50,8 @@ void setup() {
   
   pinMode(config::power_enable_pin, OUTPUT);
   digitalWrite(config::power_enable_pin, LOW);
+  
+  encoder::set_color(255, 0, 0);
 }
 
 void loop() {
@@ -61,15 +63,9 @@ void loop() {
   pixels::show();
 }
 
+/*
 void _loop() {
   encoder::update();
-  
-  if (digitalRead(config::encoder_button) == HIGH)
-    pixels::change_ring_color();
-  for (int i = 0; i < 4; i++)
-    bursts[i].update();
-  
-  encoder::set_color(1023, 0, 0);
 
   if (encoder::value() > last_encoder_value + config::encoder_sensitivity) {
     utils::debug("encoder clockwise");
@@ -82,4 +78,4 @@ void _loop() {
     last_encoder_value = encoder::value();
     sleep::reset_sleep_timer();
   }
-}
+}*/

@@ -44,9 +44,9 @@ void update() {
 int value() { return _encoder_value; }
 
 void set_color(int r, int g, int b) {
-  analogWrite(config::encoder_red, r);
-  analogWrite(config::encoder_green, g);
-  analogWrite(config::encoder_blue, b);
+  analogWrite(config::encoder_red, map(r, 0, 255, 1023, 0));
+  analogWrite(config::encoder_green, map(g, 0, 255, 1023, 0));
+  analogWrite(config::encoder_blue, map(b, 0, 255, 1023, 0));
 }
 
 }
