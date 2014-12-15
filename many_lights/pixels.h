@@ -12,16 +12,19 @@ void setup() {
   _pixels.begin();
 }
 
-void set_grid_pixel(int x, int y, int r, int g, int b) {
-  _pixels.setPixelColor(y * config::num_grid_cols + x, r, g, b);
+void set_grid_pixel(int i, uint32_t c) {
+  if (i >= config::num_grid_pixels) return;
+  _pixels.setPixelColor(i, c);
 }
 
 void set_grid_pixel(int x, int y, uint32_t c) {
-  _pixels.setPixelColor(y * config::num_grid_cols + x, c);
+  if (x < 0 || x >= config::num_grid_cols) return;
+  if (y < 0 || y >= config::num_grid_rows) return;
+  set_grid_pixel(y * config::num_grid_cols + x, c);
 }
 
-void set_grid_pixel(int i, uint32_t c) {
-  _pixels.setPixelColor(i, c);
+void set_grid_pixel(int x, int y, int r, int g, int b) {
+  set_grid_pixel(x, y, Adafruit_NeoPixel::Color(r, g, b));
 }
 
 void change_ring_color(bool forward) {
