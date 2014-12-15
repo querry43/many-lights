@@ -23,17 +23,17 @@
 
 #include "config.h"
 #include "encoder.h"
+#include "patterns.h"
 #include "pixels.h"
 #include "sleep.h"
 #include "utils.h"
 
-int last_encoder_value;
 
-pixels::random_burst bursts[] = {
-  pixels::random_burst(config::red_button, 255, 0, 0),
-  pixels::random_burst(config::green_button, 0, 255, 0),
-  pixels::random_burst(config::blue_button, 0, 0, 255),
-  pixels::random_burst(config::yellow_button, 200, 255, 0),
+patterns::random_burst bursts[] = {
+  patterns::random_burst(config::red_button, 255, 0, 0),
+  patterns::random_burst(config::green_button, 0, 255, 0),
+  patterns::random_burst(config::blue_button, 0, 0, 255),
+  patterns::random_burst(config::yellow_button, 200, 255, 0),
 };
 
 void setup() {
@@ -54,28 +54,13 @@ void setup() {
   encoder::set_color(255, 0, 0);
 }
 
+
 void loop() {
   sleep::update();
+  encoder::update();
 
   for (int i = 0; i < 4; i++)
     bursts[i].update();
   
   pixels::show();
 }
-
-/*
-void _loop() {
-  encoder::update();
-
-  if (encoder::value() > last_encoder_value + config::encoder_sensitivity) {
-    utils::debug("encoder clockwise");
-    pixels::rotate_ring(true);
-    last_encoder_value = encoder::value();
-    sleep::reset_sleep_timer();
-  } else if (encoder::value() < last_encoder_value - config::encoder_sensitivity) {
-    utils::debug("encoder counter clockwise");
-    pixels::rotate_ring(false);
-    last_encoder_value = encoder::value();
-    sleep::reset_sleep_timer();
-  }
-}*/

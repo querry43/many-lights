@@ -6,11 +6,10 @@ namespace pixels {
 
 Adafruit_NeoPixel _pixels = Adafruit_NeoPixel(config::num_pixels, config::pixel_pin, NEO_GRB + NEO_KHZ800);
 
-uint32_t _ring_color;
+uint8_t _ring_color_index = 0;
 
 void setup() {
   _pixels.begin();
-  _ring_color = Adafruit_NeoPixel::Color(255, 0, 255);
 }
 
 void set_grid_pixel(int x, int y, int r, int g, int b) {
@@ -21,9 +20,23 @@ void set_grid_pixel(int x, int y, uint32_t c) {
   _pixels.setPixelColor(y * config::num_grid_cols + x, c);
 }
 
+void set_grid_pixel(int i, uint32_t c) {
+  _pixels.setPixelColor(i, c);
+}
+
+void change_ring_color(bool forward) {
+  if (forward)
+    _ring_color_index = (_ring_color_index + 1) % config::num_ring_colors();
+  else if (((signed) _ring_color_index) - 1 < 0)
+    _ring_color_index =  config::num_ring_colors() - 1;
+  else
+    _ring_color_index = _ring_color_index - 1;
+}
+
+
 void show() {
   for (int i = 0; i < config::num_ring_pixels; i++)
-    _pixels.setPixelColor(config::num_grid_pixels + i, _ring_color);
+    _pixels.setPixelColor(config::num_grid_pixels + i, config::ring_colors[_ring_color_index]);
 
   _pixels.show();
 }
@@ -31,79 +44,5 @@ void show() {
 void clear() {
   _pixels.clear();
 }
-
-class random_burst {
-private:
-  typedef enum {IDLE, INCREMENT, DECREMENT} mode_t;
-  mode_t mode;
-
-  uint8_t pin;
-  uint8_t _r, _g, _b;
-  uint8_t x, y;
-  
-  float t;
-  
-  random_burst() { }
-  
-  void check_button() {
-    if (digitalRead(pin) == LOW) {
-      mode = INCREMENT;
-      x = random(config::num_grid_cols);
-      y = random(config::num_grid_rows);
-    }
-  }
-  
-  void update_pattern() {
-    if (mode == DECREMENT && t <= 0.1) {
-      utils::debug("end of pattern");
-      t = 0.0;
-      mode = IDLE;
-      draw(0, 0);
-      
-    } else {
-      int r = t * _r,
-          g = t * _g,
-          b = t * _b;
-      
-      draw(
-        Adafruit_NeoPixel::Color(mode == INCREMENT ? r : max(0, r-100), mode == INCREMENT ? g : max(0, g-100), mode == INCREMENT ? b : max(0, b-100)),
-        Adafruit_NeoPixel::Color(mode == INCREMENT ? max(0, r-100) : r, mode == INCREMENT ? max(0, g-100) : g, mode == INCREMENT ? max(0, b-100) : b)
-      );
-  
-      if (t >= 0.9)
-        mode = DECREMENT;
-      
-      if (mode == INCREMENT)
-        t += 0.01;
-      else if (mode == DECREMENT)
-        t -= 0.01;
-    }
-  }
-  
-  void draw(uint32_t interior_color, uint32_t exterior_color) {
-    pixels::set_grid_pixel(x, y, interior_color);
-    
-    if (x < config::num_grid_cols - 1) 
-      pixels::set_grid_pixel(x+1, y, exterior_color);
-    if (x > 0)
-      pixels::set_grid_pixel(x-1, y, exterior_color);
-
-    if (y < config::num_grid_rows - 1)
-      pixels::set_grid_pixel(x, y+1, exterior_color);
-    if (y > 0)
-      pixels::set_grid_pixel(x, y-1, exterior_color);
-  }
-
-public:
-  random_burst(uint8_t pin, uint8_t r, uint8_t g, uint8_t b) : mode(IDLE), pin(pin), _r(r), _g(g), _b(b), t(0.0) { }
-  
-  void update() {
-    if (mode == IDLE)
-      check_button();
-    
-    if (mode != IDLE)
-      update_pattern();
-  }
-};
 
 };

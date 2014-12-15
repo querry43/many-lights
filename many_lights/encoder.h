@@ -1,11 +1,14 @@
 #pragma once
 
+#include "pixels.h"
+#include "sleep.h"
 #include "utils.h"
 
 namespace encoder {
   
 int _last_encoded;
 int long _encoder_value;
+int long _last_encoder_value;
 
 
 int _get_value() {
@@ -31,6 +34,8 @@ void setup() {
   _last_encoded = _get_value();
 }
 
+int value() { return _encoder_value; }
+
 void update() {
   int encoded = _get_value();
   int sum = (_last_encoded << 2) | encoded; //adding it to the previous encoded value
@@ -39,9 +44,18 @@ void update() {
   if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) _encoder_value--;
 
   _last_encoded = encoded; //store this value for next time
-}
 
-int value() { return _encoder_value; }
+  if (value() > _last_encoder_value + config::encoder_sensitivity) {
+    pixels::change_ring_color(true);
+    _last_encoder_value = value();
+    sleep::reset_sleep_timer();
+  } else if (value() < _last_encoder_value - config::encoder_sensitivity) {
+    pixels::change_ring_color(false);
+    _last_encoder_value = value();
+    sleep::reset_sleep_timer();
+  }
+
+}
 
 void set_color(int r, int g, int b) {
   analogWrite(config::encoder_red, map(r, 0, 255, 1023, 0));
