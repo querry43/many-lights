@@ -1,6 +1,5 @@
 #pragma once
 
-#include "pixels.h"
 #include "sleep.h"
 #include "utils.h"
 
@@ -9,6 +8,7 @@ namespace encoder {
 int _last_encoded;
 int long _encoder_value;
 int long _last_encoder_value;
+int _ring_setting = 0;
 
 
 int _get_value() {
@@ -34,7 +34,21 @@ void setup() {
   _last_encoded = _get_value();
 }
 
-int value() { return _encoder_value; }
+void change_ring_setting(bool inc) {
+  _last_encoder_value = _encoder_value;
+  sleep::reset_sleep_timer();
+
+  if (inc)
+    _ring_setting = (_ring_setting + 1) % config::num_ring_colors();
+  else if (_ring_setting - 1 < 0)
+    _ring_setting =  config::num_ring_colors() - 1;
+  else
+    _ring_setting = _ring_setting - 1;
+
+  utils::debug("encoder change");
+}
+
+int value() { return _ring_setting; }
 
 void update() {
   int encoded = _get_value();
@@ -45,16 +59,10 @@ void update() {
 
   _last_encoded = encoded; //store this value for next time
 
-  if (value() > _last_encoder_value + config::encoder_sensitivity) {
-    pixels::change_ring_color(true);
-    _last_encoder_value = value();
-    sleep::reset_sleep_timer();
-  } else if (value() < _last_encoder_value - config::encoder_sensitivity) {
-    pixels::change_ring_color(false);
-    _last_encoder_value = value();
-    sleep::reset_sleep_timer();
-  }
-
+  if (_encoder_value > _last_encoder_value + config::encoder_sensitivity)
+    change_ring_setting(true);
+  else if (_encoder_value < _last_encoder_value - config::encoder_sensitivity)
+    change_ring_setting(false);
 }
 
 void set_color(int r, int g, int b) {

@@ -66,9 +66,12 @@ void loop() {
   sleep::update();
   encoder::update();
 
-  for (int i = 0; i < 4; i++)
-    waves[i].update();
-    //bursts[i].update();
-  
+  if (encoder::value() == 0)
+    for (int i = 0; i < 4; i++)
+      waves[i].update();
+  else
+    for (int i = 0; i < 4; i++)
+      bursts[i].update();
+
   pixels::show();
 }

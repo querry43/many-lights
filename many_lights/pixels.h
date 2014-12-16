@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+#include "encoder.h"
 
 namespace pixels {
 
@@ -27,19 +28,9 @@ void set_grid_pixel(int x, int y, int r, int g, int b) {
   set_grid_pixel(x, y, Adafruit_NeoPixel::Color(r, g, b));
 }
 
-void change_ring_color(bool forward) {
-  if (forward)
-    _ring_color_index = (_ring_color_index + 1) % config::num_ring_colors();
-  else if (((signed) _ring_color_index) - 1 < 0)
-    _ring_color_index =  config::num_ring_colors() - 1;
-  else
-    _ring_color_index = _ring_color_index - 1;
-}
-
-
 void show() {
   for (int i = 0; i < config::num_ring_pixels; i++)
-    _pixels.setPixelColor(config::num_grid_pixels + i, config::ring_colors[_ring_color_index]);
+    _pixels.setPixelColor(config::num_grid_pixels + i, config::ring_colors[encoder::value()]);
 
   _pixels.show();
 }

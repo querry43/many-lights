@@ -29,7 +29,6 @@ const int yellow_button = 5;
 
 const uint32_t ring_colors[] = {
   Adafruit_NeoPixel::Color(255,   0, 255),
-  Adafruit_NeoPixel::Color(0,   255,   0),
   Adafruit_NeoPixel::Color(0,   255, 255),
 };
 

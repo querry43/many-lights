@@ -16,40 +16,56 @@ private:
   float index;
   int wave_width;
 
-  bool is_half_intensity(int x, int y) {
-    return x + y == index - 1
-      || x + y == (int) index - wave_width;
+  uint8_t orientation;
+
+  bool is_half_intensity(int int_index, int x, int y) {
+    return x + y == int_index - 1
+      || x + y == int_index - wave_width;
   }
 
-  bool is_full_intensity(int x, int y) {
-    return x + y > (int) index - wave_width;
+  bool is_full_intensity(int int_index, int x, int y) {
+    return x + y > int_index - wave_width;
   }
 
-  bool is_off(int x, int y) {
-    return x + y == (int) index - wave_width - 1;
+  bool is_off(int int_index, int x, int y) {
+    return x + y == int_index - wave_width - 1;
   }
 
   void do_wave() {
-    for (int x = 0; x < (int) index; x++) {
-      for (int y = 0; y < (int) index - x; y++) {
-        if (is_half_intensity(x, y))
-          pixels::set_grid_pixel(x, y, _r * 0.5, _g * 0.5, _b * 0.5);
-        else if (is_full_intensity(x, y))
-          pixels::set_grid_pixel(x, y, _r, _g, _b);
-        else if (is_off(x, y))
-          pixels::set_grid_pixel(x, y, 0, 0, 0);
+    int int_index = (int) index;
+
+    for (int x = 0; x < int_index; x++) {
+      for (int y = 0; y < int_index - x; y++) {
+        if (is_half_intensity(int_index, x, y))
+          translate_pixel(x, y, _r * 0.5, _g * 0.5, _b * 0.5);
+        else if (is_full_intensity(int_index, x, y))
+          translate_pixel(x, y, _r, _g, _b);
+        else if (is_off(int_index, x, y))
+          translate_pixel(x, y, 0, 0, 0);
       }
     }
 
     index += 0.1;
 
-    if (index > config::num_grid_cols + config::num_grid_rows + wave_width)
+    if (index > config::num_grid_cols + config::num_grid_rows + wave_width + 2)
       reset();
   }
 
+  void translate_pixel(int x, int y, int r, int g, int b) {
+    if (orientation % 2 == 1)
+      x = map(x, 0, config::num_grid_cols, config::num_grid_cols, 0);
+
+    if (orientation > 1)
+      y = map(y, 0, config::num_grid_rows, config::num_grid_rows, 0);
+
+    pixels::set_grid_pixel(x, y, r, g, b);
+  }
+
   void check_button() {
-    if (digitalRead(pin) == LOW)
+    if (digitalRead(pin) == LOW) {
       mode = ACTIVE;
+      orientation = random(0, 4);
+    }
   }
 
 public:
@@ -90,7 +106,6 @@ private:
 
   void update_pattern() {
     if (mode == DECREMENT && t <= 0.1) {
-      utils::debug("end of pattern");
       t = 0.0;
       mode = IDLE;
       draw(0, 0);
