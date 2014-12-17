@@ -36,13 +36,15 @@ patterns::random_burst bursts[] = {
   patterns::random_burst(config::yellow_button, 200, 255, 0),
 };
 
-
 patterns::wave waves[] = {
   patterns::wave(config::red_button, 255, 0, 0),
   patterns::wave(config::green_button, 0, 255, 0),
   patterns::wave(config::blue_button, 0, 0, 255),
   patterns::wave(config::yellow_button, 200, 255, 0),
 };
+
+patterns::theater_chase tc;
+
 
 void setup() {
   Serial.begin(9600);
@@ -58,20 +60,24 @@ void setup() {
   
   pinMode(config::power_enable_pin, OUTPUT);
   digitalWrite(config::power_enable_pin, LOW);
-  
-  encoder::set_color(255, 0, 0);
 }
+
 
 void loop() {
   sleep::update();
   encoder::update();
 
-  if (encoder::value() == 0)
-    for (int i = 0; i < 4; i++)
-      waves[i].update();
-  else
-    for (int i = 0; i < 4; i++)
-      bursts[i].update();
+  switch (encoder::value()) {
+    case 0:
+      for (int i = 0; i < 4; i++) waves[i].update();
+      break;
+    case 1:
+      for (int i = 0; i < 4; i++) bursts[i].update();
+      break;
+    case 2:
+      tc.update();
+  }
+
 
   pixels::show();
 }

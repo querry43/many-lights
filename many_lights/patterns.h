@@ -161,25 +161,38 @@ public:
   }
 };
 
-const int chaser_cycles = 5;
-
 // modified from the adafruit sample code
-void theater_chase(uint8_t r, uint8_t g, uint8_t b, uint8_t wait) {
-  uint32_t color = Adafruit_NeoPixel::Color(r, g, b);
-  
-  for (int cycle = 0;  cycle < chaser_cycles; cycle++) {
-    for (int  offset = 0; offset < 3; offset++) {
-      for (int i = 0; i < config::num_grid_pixels; i += 3)
-        pixels::set_grid_pixel(i+offset, color);
+class theater_chase {
+private:
+  int offset;
+  void draw(int r, int g, int b) {
+    for (int i = 0; i < config::num_grid_pixels; i += 3)
+      pixels::set_grid_pixel(i+offset, 0);
 
-      pixels::show();
-      delay(wait);
-     
-      for (int i = 0; i < config::num_grid_pixels; i += 3)
-        pixels::set_grid_pixel(i+offset, 0);
-    }
+    offset = (offset + 1) % 3;
+
+    for (int i = 0; i < config::num_grid_pixels; i += 3)
+      pixels::set_grid_pixel(i+offset, Adafruit_NeoPixel::Color(r, g, b));
+
+    delay(50);
   }
-}
+
+public:
+  theater_chase() : offset(0) { }
+
+  void update() {
+    if (digitalRead(config::green_button) == LOW)
+      draw(0, 255, 0);
+    else if (digitalRead(config::red_button) == LOW)
+      draw(255, 0, 0);
+    else if (digitalRead(config::blue_button) == LOW)
+      draw(0, 0, 255);
+    else if (digitalRead(config::yellow_button) == LOW)
+      draw(200, 255, 0);
+    else
+      pixels::clear();
+  }
+};
 
 };
 
