@@ -2,7 +2,7 @@
 
 namespace config {
 
-const unsigned long sleep_after_millis = 5 * 1000UL;
+const unsigned long sleep_after_millis = 60 * 1000UL;
 
 const int encoder_a = 6;
 const int encoder_b = 7;
