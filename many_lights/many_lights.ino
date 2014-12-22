@@ -29,13 +29,6 @@
 #include "utils.h"
 
 
-patterns::random_burst bursts[] = {
-  patterns::random_burst(config::red_button, 255, 0, 0),
-  patterns::random_burst(config::green_button, 0, 255, 0),
-  patterns::random_burst(config::blue_button, 0, 0, 255),
-  patterns::random_burst(config::yellow_button, 200, 255, 0),
-};
-
 patterns::wave waves[] = {
   patterns::wave(config::red_button, 255, 0, 0),
   patterns::wave(config::green_button, 0, 255, 0),
@@ -43,7 +36,9 @@ patterns::wave waves[] = {
   patterns::wave(config::yellow_button, 200, 255, 0),
 };
 
-patterns::theater_chase tc;
+patterns::theater_chase theater_chase;
+
+patterns::splotches splotches;
 
 
 void setup() {
@@ -57,7 +52,7 @@ void setup() {
     pinMode(config::input_pins[i], INPUT);
     digitalWrite(config::input_pins[i], HIGH);
   }
-  
+
   pinMode(config::power_enable_pin, OUTPUT);
   digitalWrite(config::power_enable_pin, LOW);
 }
@@ -72,12 +67,11 @@ void loop() {
       for (int i = 0; i < 4; i++) waves[i].update();
       break;
     case 1:
-      for (int i = 0; i < 4; i++) bursts[i].update();
+      splotches.update();
       break;
     case 2:
-      tc.update();
+      theater_chase.update();
   }
-
 
   pixels::show();
 }

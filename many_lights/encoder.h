@@ -4,7 +4,7 @@
 #include "utils.h"
 
 namespace encoder {
-  
+
 int _last_encoded;
 int long _encoder_value;
 int long _last_encoder_value;
@@ -24,9 +24,9 @@ void setup() {
 
   digitalWrite(config::encoder_a, HIGH);
   digitalWrite(config::encoder_b, HIGH);
-  
+
   pinMode(config::encoder_button, INPUT);
-  
+
   pinMode(config::encoder_red, OUTPUT);
   pinMode(config::encoder_green, OUTPUT);
   pinMode(config::encoder_blue, OUTPUT);

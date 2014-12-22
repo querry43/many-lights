@@ -7,7 +7,7 @@
 
 namespace sleep {
 
-unsigned long _wakeup_millis = 0; 
+unsigned long _wakeup_millis = 0;
 
 void _interrupt() {
   utils::debug(PCintPort::arduinoPin); // Serial prints are known to cause issues
@@ -27,10 +27,10 @@ void _detach_interrupt() {
 
 void _sleep() {
   utils::debug("sleep()", 1000); // the delay fixes serial prints that are not flushed before sleep
-  
+
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
-  
+
   digitalWrite(config::pixel_pin, LOW);
   digitalWrite(config::power_enable_pin, HIGH);
   _attach_interrupt();
@@ -39,7 +39,7 @@ void _sleep() {
   _detach_interrupt();
   _wakeup_millis = millis();
   digitalWrite(config::power_enable_pin, LOW);
-  
+
   utils::debug("waking up from sleep");
 }
 

@@ -13,6 +13,14 @@ void setup() {
   _pixels.begin();
 }
 
+uint32_t index_from_coords(int x, int y) {
+  return y * config::num_grid_cols + x;
+}
+
+uint32_t get_grid_pixel(int x, int y) {
+  return _pixels.getPixelColor(index_from_coords(x, y));
+}
+
 void set_grid_pixel(int i, uint32_t c) {
   if (i >= config::num_grid_pixels) return;
   _pixels.setPixelColor(i, c);
@@ -21,7 +29,7 @@ void set_grid_pixel(int i, uint32_t c) {
 void set_grid_pixel(int x, int y, uint32_t c) {
   if (x < 0 || x >= config::num_grid_cols) return;
   if (y < 0 || y >= config::num_grid_rows) return;
-  set_grid_pixel(y * config::num_grid_cols + x, c);
+  set_grid_pixel(index_from_coords(x, y), c);
 }
 
 void set_grid_pixel(int x, int y, int r, int g, int b) {

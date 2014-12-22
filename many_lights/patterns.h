@@ -5,7 +5,24 @@
 
 namespace patterns {
 
-class wave {
+class pattern {
+protected:
+  void merge_colors(int x, int y, int r, int g, int b) {
+    pixels::set_grid_pixel(x, y, Adafruit_NeoPixel::Color(r, g, b) | pixels::get_grid_pixel(x, y));
+  }
+
+public:
+  virtual void update() {
+    if (digitalRead(config::encoder_button) == HIGH)
+      this->reset();
+  }
+
+  virtual void reset() {
+    pixels::clear();
+  }
+};
+
+class wave : public pattern {
 private:
   typedef enum {IDLE, ACTIVE} mode_t;
   mode_t mode;
@@ -58,7 +75,10 @@ private:
     if (orientation > 1)
       y = map(y, 0, config::num_grid_rows, config::num_grid_rows, 0);
 
-    pixels::set_grid_pixel(x, y, r, g, b);
+    if (r == 0 && g == 0 && b == 0)
+      pixels::set_grid_pixel(x, y, r, g, b);
+    else
+      merge_colors(x, y, r, g, b);
   }
 
   void check_button() {
@@ -67,6 +87,7 @@ private:
       orientation = random(0, 4);
     }
   }
+
 
 public:
   wave(uint8_t pin, uint8_t r, uint8_t g, uint8_t b) : mode(IDLE), pin(pin), _r(r), _g(g), _b(b), index(0), wave_width(4) { }
@@ -77,102 +98,65 @@ public:
 
     if (mode == ACTIVE)
       do_wave();
+
+    pattern::update();
   }
 
   void reset() {
     mode = IDLE;
     index = 0;
+    pattern::reset();
   }
 };
 
-class random_burst {
+class splotches : public pattern {
 private:
-  typedef enum {IDLE, INCREMENT, DECREMENT} mode_t;
-  mode_t mode;
+  void draw(int r, int g, int b) {
+    uint8_t x = random(config::num_grid_cols);
+    uint8_t y = random(config::num_grid_rows);
 
-  uint8_t pin;
-  uint8_t _r, _g, _b;
-  uint8_t x, y;
+    merge_colors(x, y, r, g, b);
 
-  float t;
-
-  void check_button() {
-    if (digitalRead(pin) == LOW) {
-      mode = INCREMENT;
-      x = random(config::num_grid_cols);
-      y = random(config::num_grid_rows);
-    }
-  }
-
-  void update_pattern() {
-    if (mode == DECREMENT && t <= 0.1) {
-      t = 0.0;
-      mode = IDLE;
-      draw(0, 0);
-      
-    } else {
-      int r = t * _r,
-          g = t * _g,
-          b = t * _b;
-
-      draw(
-        Adafruit_NeoPixel::Color(mode == INCREMENT ? r : max(0, r-100), mode == INCREMENT ? g : max(0, g-100), mode == INCREMENT ? b : max(0, b-100)),
-        Adafruit_NeoPixel::Color(mode == INCREMENT ? max(0, r-100) : r, mode == INCREMENT ? max(0, g-100) : g, mode == INCREMENT ? max(0, b-100) : b)
-      );
-
-      if (t >= 0.9)
-        mode = DECREMENT;
-      
-      if (mode == INCREMENT)
-        t += 0.01;
-      else if (mode == DECREMENT)
-        t -= 0.01;
-    }
-  }
-
-  void draw(uint32_t interior_color, uint32_t exterior_color) {
-    pixels::set_grid_pixel(x, y, interior_color);
-
-    if (x < config::num_grid_cols - 1) 
-      pixels::set_grid_pixel(x+1, y, exterior_color);
+    if (x < config::num_grid_cols - 1)
+      merge_colors(x+1, y, r, g, b);
     if (x > 0)
-      pixels::set_grid_pixel(x-1, y, exterior_color);
+      merge_colors(x-1, y, r, g, b);
 
     if (y < config::num_grid_rows - 1)
-      pixels::set_grid_pixel(x, y+1, exterior_color);
+      merge_colors(x, y+1, r, g, b);
     if (y > 0)
-      pixels::set_grid_pixel(x, y-1, exterior_color);
+      merge_colors(x, y-1, r, g, b);
+
+    delay(100);
   }
 
 public:
-  random_burst(uint8_t pin, uint8_t r, uint8_t g, uint8_t b) : mode(IDLE), pin(pin), _r(r), _g(g), _b(b), t(0.0) { }
-
   void update() {
-    if (mode == IDLE)
-      check_button();
-
-    if (mode != IDLE)
-      update_pattern();
-  }
-
-  void reset() {
-    mode = IDLE;
-    t = 0.0;
+    if (digitalRead(config::green_button) == LOW)
+      draw(0, 255, 0);
+    if (digitalRead(config::red_button) == LOW)
+      draw(255, 0, 0);
+    if (digitalRead(config::blue_button) == LOW)
+      draw(0, 0, 255);
+    if (digitalRead(config::yellow_button) == LOW)
+      draw(200, 255, 0);
+    
+    pattern::update();
   }
 };
 
-// modified from the adafruit sample code
-class theater_chase {
+class theater_chase : public pattern {
 private:
   int offset;
-  void draw(int r, int g, int b) {
+
+  void draw(uint32_t color) {
     for (int i = 0; i < config::num_grid_pixels; i += 3)
       pixels::set_grid_pixel(i+offset, 0);
 
     offset = (offset + 1) % 3;
 
     for (int i = 0; i < config::num_grid_pixels; i += 3)
-      pixels::set_grid_pixel(i+offset, Adafruit_NeoPixel::Color(r, g, b));
+      pixels::set_grid_pixel(i+offset, color);
 
     delay(50);
   }
@@ -181,16 +165,23 @@ public:
   theater_chase() : offset(0) { }
 
   void update() {
+    uint32_t color = 0;
+
     if (digitalRead(config::green_button) == LOW)
-      draw(0, 255, 0);
-    else if (digitalRead(config::red_button) == LOW)
-      draw(255, 0, 0);
-    else if (digitalRead(config::blue_button) == LOW)
-      draw(0, 0, 255);
-    else if (digitalRead(config::yellow_button) == LOW)
-      draw(200, 255, 0);
+      color |= Adafruit_NeoPixel::Color(0, 255, 0);
+    if (digitalRead(config::red_button) == LOW)
+      color |= Adafruit_NeoPixel::Color(255, 0, 0);
+    if (digitalRead(config::blue_button) == LOW)
+      color |= Adafruit_NeoPixel::Color(0, 0, 255);
+    if (digitalRead(config::yellow_button) == LOW)
+      color |= Adafruit_NeoPixel::Color(200, 255, 0);
+
+    if (color == 0)
+      reset();
     else
-      pixels::clear();
+      draw(color);
+
+    pattern::update();
   }
 };
 
