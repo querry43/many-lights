@@ -51,20 +51,25 @@ void change_ring_setting(bool inc) {
 int value() { return _ring_setting; }
 
 void update() {
-  int encoded = _get_value();
-  int sum = (_last_encoded << 2) | encoded; //adding it to the previous encoded value
-
-  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) _encoder_value++;
-  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) _encoder_value--;
-
-  _last_encoded = encoded; //store this value for next time
-
-  utils::debug(_encoder_value);
-
-  if (_encoder_value > _last_encoder_value + config::encoder_sensitivity)
+  if (digitalRead(config::encoder_button) == HIGH) {
     change_ring_setting(true);
-  else if (_encoder_value < _last_encoder_value - config::encoder_sensitivity)
-    change_ring_setting(false);
+    delay(250);
+  } else {
+    int encoded = _get_value();
+    int sum = (_last_encoded << 2) | encoded; //adding it to the previous encoded value
+
+    if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) _encoder_value++;
+    if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) _encoder_value--;
+
+    _last_encoded = encoded; //store this value for next time
+
+    utils::debug(_encoder_value);
+
+    if (_encoder_value > _last_encoder_value + config::encoder_sensitivity)
+      change_ring_setting(true);
+    else if (_encoder_value < _last_encoder_value - config::encoder_sensitivity)
+      change_ring_setting(false);
+  }
 }
 
 void set_color(int r, int g, int b) {
