@@ -5,24 +5,7 @@
 
 namespace patterns {
 
-class pattern {
-protected:
-  void merge_colors(int x, int y, int r, int g, int b) {
-    pixels::set_grid_pixel(x, y, Adafruit_NeoPixel::Color(r, g, b) | pixels::get_grid_pixel(x, y));
-  }
-
-public:
-  virtual void update() {
-    if (digitalRead(config::encoder_button) == HIGH)
-      this->reset();
-  }
-
-  virtual void reset() {
-    pixels::clear();
-  }
-};
-
-class wave : public pattern {
+class wave {
 private:
   typedef enum {IDLE, ACTIVE} mode_t;
   mode_t mode;
@@ -78,7 +61,7 @@ private:
     if (r == 0 && g == 0 && b == 0)
       pixels::set_grid_pixel(x, y, r, g, b);
     else
-      merge_colors(x, y, r, g, b);
+      pixels::add_grid_color(x, y, r, g, b);
   }
 
   void check_button() {
@@ -98,40 +81,45 @@ public:
 
     if (mode == ACTIVE)
       do_wave();
-
-    pattern::update();
   }
 
   void reset() {
     mode = IDLE;
     index = 0;
-    pattern::reset();
   }
 };
 
-class splotches : public pattern {
+class splotches {
 private:
   void draw(int r, int g, int b) {
     uint8_t x = random(config::num_grid_cols);
     uint8_t y = random(config::num_grid_rows);
 
-    merge_colors(x, y, r, g, b);
+    pixels::add_grid_color(x, y, r, g, b);
 
     if (x < config::num_grid_cols - 1)
-      merge_colors(x+1, y, r, g, b);
+      pixels::add_grid_color(x+1, y, r, g, b);
     if (x > 0)
-      merge_colors(x-1, y, r, g, b);
+      pixels::add_grid_color(x-1, y, r, g, b);
 
     if (y < config::num_grid_rows - 1)
-      merge_colors(x, y+1, r, g, b);
+      pixels::add_grid_color(x, y+1, r, g, b);
     if (y > 0)
-      merge_colors(x, y-1, r, g, b);
+      pixels::add_grid_color(x, y-1, r, g, b);
 
     delay(100);
   }
 
 public:
   void update() {
+    for (int i = 0; i < config::num_grid_pixels; i++) {
+      uint32_t color = pixels::get_grid_pixel(i);
+      uint8_t r = (uint8_t)(color >> 16);
+      uint8_t g = (uint8_t)(color >> 8);
+      uint8_t b = (uint8_t)color;
+      pixels::set_grid_pixel(i, Adafruit_NeoPixel::Color(max(r-1, 0), max(g-1, 0), max(b-1, 0)));
+    }
+
     if (digitalRead(config::green_button) == LOW)
       draw(0, 255, 0);
     if (digitalRead(config::red_button) == LOW)
@@ -140,12 +128,10 @@ public:
       draw(0, 0, 255);
     if (digitalRead(config::yellow_button) == LOW)
       draw(200, 255, 0);
-    
-    pattern::update();
   }
 };
 
-class theater_chase : public pattern {
+class theater_chase {
 private:
   int offset;
 
@@ -157,7 +143,6 @@ private:
 
     for (int i = 0; i < config::num_grid_pixels; i += 3)
       pixels::set_grid_pixel(i+offset, color);
-
     delay(50);
   }
 
@@ -177,12 +162,93 @@ public:
       color |= Adafruit_NeoPixel::Color(200, 255, 0);
 
     if (color == 0)
-      reset();
+      pixels::clear();
     else
       draw(color);
-
-    pattern::update();
   }
+};
+
+class heart {
+private:
+  uint32_t color;
+  float hue;
+
+  void draw() {
+    pixels::set_grid_pixel(2, 0, color);
+    pixels::set_grid_pixel(4, 0, color);
+
+    for (int x = 1; x <= 5; x++)
+      pixels::set_grid_pixel(x, 1, color);
+
+    for (int x = 1; x <= 5; x++)
+      pixels::set_grid_pixel(x, 1, color);
+
+    for (int x = 2; x <= 4; x++)
+      pixels::set_grid_pixel(x, 2, color);
+
+    pixels::set_grid_pixel(3, 3, color);
+  }
+
+  // This function taken from here:
+  // http://eduardofv.com/read_post/179-Arduino-RGB-LED-HSV-Color-Wheel-
+  void update_color() {
+    unsigned int inSaturation = 255;
+    unsigned int inBrightness = 255;
+
+    unsigned int scaledHue = (hue * 6);
+    unsigned int sector = scaledHue >> 8; // sector 0 to 5 around the color wheel
+    unsigned int offsetInSector = scaledHue - (sector << 8);  // position within the sector
+    unsigned int p = (inBrightness * ( 255 - inSaturation )) >> 8;
+    unsigned int q = (inBrightness * ( 255 - ((inSaturation * offsetInSector) >> 8) )) >> 8;
+    unsigned int t = (inBrightness * ( 255 - ((inSaturation * ( 255 - offsetInSector )) >> 8) )) >> 8;
+
+    int r, g, b;
+
+    switch( sector ) {
+      case 0:
+        r = inBrightness;
+        g = t;
+        b = p;
+        break;
+      case 1:
+        r = q;
+        g = inBrightness;
+        b = p;
+        break;
+      case 2:
+        r = p;
+        g = inBrightness;
+        b = t;
+        break;
+      case 3:
+        r = p;
+        g = q;
+        b = inBrightness;
+        break;
+      case 4:
+        r = t;
+        g = p;
+        b = inBrightness;
+        break;
+      default:    // case 5:
+        r = inBrightness;
+        g = p;
+        b = q;
+        break;
+    }
+
+    color = Adafruit_NeoPixel::Color(r, g, b);
+
+    hue = fmod(hue + 0.1, 256);
+  }
+
+public:
+  heart() : hue(100.0) { update_color(); }
+
+  void update() {
+    update_color();
+    draw();
+  };
 };
 
 };

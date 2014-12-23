@@ -37,9 +37,8 @@ patterns::wave waves[] = {
 };
 
 patterns::theater_chase theater_chase;
-
 patterns::splotches splotches;
-
+patterns::heart heart;
 
 void setup() {
   Serial.begin(9600);
@@ -57,20 +56,23 @@ void setup() {
   digitalWrite(config::power_enable_pin, LOW);
 }
 
-
 void loop() {
   sleep::update();
   encoder::update();
 
   switch (encoder::value()) {
     case 0:
-      for (int i = 0; i < 4; i++) waves[i].update();
-      break;
-    case 1:
       splotches.update();
       break;
+    case 1:
+      for (int i = 0; i < 4; i++) waves[i].update();
+      break;
     case 2:
+      heart.update();
+      break;
+    case 3:
       theater_chase.update();
+      break;
   }
 
   pixels::show();

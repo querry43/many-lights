@@ -10,7 +10,7 @@ const int encoder_button = 8;
 const int encoder_red = 9;
 const int encoder_green = 10;
 const int encoder_blue = 11;
-const int encoder_sensitivity = 10;
+const int encoder_sensitivity = 15;
 
 const int power_enable_pin = 12;
 
@@ -31,6 +31,7 @@ const uint32_t ring_colors[] = {
   Adafruit_NeoPixel::Color(255,   0, 255),
   Adafruit_NeoPixel::Color(0,   255, 255),
   Adafruit_NeoPixel::Color(255,   255, 0),
+  Adafruit_NeoPixel::Color(255,   255, 255),
 };
 
 const uint8_t num_ring_colors() {

@@ -17,8 +17,12 @@ uint32_t index_from_coords(int x, int y) {
   return y * config::num_grid_cols + x;
 }
 
+uint32_t get_grid_pixel(int i) {
+  return _pixels.getPixelColor(i);
+}
+
 uint32_t get_grid_pixel(int x, int y) {
-  return _pixels.getPixelColor(index_from_coords(x, y));
+  return get_grid_pixel(index_from_coords(x, y));
 }
 
 void set_grid_pixel(int i, uint32_t c) {
@@ -33,7 +37,11 @@ void set_grid_pixel(int x, int y, uint32_t c) {
 }
 
 void set_grid_pixel(int x, int y, int r, int g, int b) {
-  set_grid_pixel(x, y, Adafruit_NeoPixel::Color(r, g, b));
+  _pixels.setPixelColor(index_from_coords(x, y), r, g, b);
+}
+
+void add_grid_color(int x, int y, int r, int g, int b) {
+    set_grid_pixel(x, y, Adafruit_NeoPixel::Color(r, g, b) | get_grid_pixel(x, y));
 }
 
 void show() {

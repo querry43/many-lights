@@ -45,7 +45,7 @@ void change_ring_setting(bool inc) {
   else
     _ring_setting = _ring_setting - 1;
 
-  utils::debug("encoder change");
+  utils::debug("encoder::change_ring_setting() changed");
 }
 
 int value() { return _ring_setting; }
@@ -58,6 +58,8 @@ void update() {
   if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) _encoder_value--;
 
   _last_encoded = encoded; //store this value for next time
+
+  utils::debug(_encoder_value);
 
   if (_encoder_value > _last_encoder_value + config::encoder_sensitivity)
     change_ring_setting(true);
