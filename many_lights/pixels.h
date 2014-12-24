@@ -11,6 +11,7 @@ uint8_t _ring_color_index = 0;
 
 void setup() {
   _pixels.begin();
+  _pixels.setBrightness(config::pixel_brightness);
 }
 
 uint32_t index_from_coords(int x, int y) {
